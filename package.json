@@ -1,0 +1,28 @@
+{
+  "name": "node_web_crawler",
+  "version": "1.0.0",
+  "description": "website crawler API with Nodejs",
+  "main": "index.js",
+  "scripts": {
+    "start": "nodemon ./index.js --watch . --exec babel-node",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "Node.js",
+    "Javascript",
+    "Express"
+  ],
+  "devDependencies": {
+    "babel-cli": "^6.26.0",
+    "babel-core": "6.26.0",
+    "babel-preset-es2015": "^6.24.1",
+    "babel-preset-stage-2": "^6.24.1",
+    "babel-register": "6.26.0",
+    "nodemon": "^1.17.3"
+  },
+  "author": "komla Sodji",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.17.1"
+  }
+}
