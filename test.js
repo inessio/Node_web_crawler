@@ -38,6 +38,7 @@ function visitPage(url, callback) {
   // Make the request
   console.log("Visiting page " + url);
   request(url, function(error, response, body) {
+   
      // Check status code (200 is HTTP OK)
      console.log("Status code: " + response.statusCode);
      if(response.statusCode !== 200) {
