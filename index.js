@@ -19,7 +19,7 @@ app.post('/crawl',[
     .isEmail()
     .isURL(),
     check('numLevels').isNumeric(),
-    check('regexes').isArray()
+    check('regexes').isArray().not().isEmpty()
     
 ], async (req,res) => {
     const request = req.body
