@@ -1,6 +1,5 @@
 'use strict'
 
-import URL from 'url-parse';
 import cheerio from 'cheerio';
 import request from 'request';
 import fs from 'fs';
@@ -29,21 +28,20 @@ const crawler = (domain, numLevels = 3, regexes=[]) => {
 const crawl = () => {
   if(pagesToVisit.length > 0){
     var nextPage = pagesToVisit.pop();
-    if (nextPage in pagesVisited) {
-    crawl();
+    if (pagesVisited.has(nextPage)) {
+       crawl();
     } else {
-    visitPage(nextPage,crawl);
-   }
+      visitPage(nextPage,crawl);
+    }
   }
-  console.log('No matched links found')
-  return;
-  
-
+  console.log(pagesToVisit)
+    
 }
 
 const visitPage = (url,callback) => {
   try{
     pagesVisited.add(url);
+    console.log(`Visiting ... ${url}`);
     request(url, async function(error, response, body) {
       if(error){
         console.log('Error: ', error)
@@ -56,21 +54,30 @@ const visitPage = (url,callback) => {
       }
       var $ = cheerio.load(body);
       await searchForLinks($);
-      await getMatchLinks();
-      if(numLevelVisited > totalLevel) {
+      const matchedLinks = await getMatchLinks();
+      if(matchedLinks === true){
+        if(numLevelVisited > totalLevel) {
+          fs.appendFileSync('result.ndjson',JSON.stringify(file) + '\n' )
+            console.log("Reached max limit of number of pages to visit.");
+            initializeVariables()
+            return;
+          }else{
+            numLevelVisited++
+            callback(); 
+          }
+      }else{
         fs.appendFileSync('result.ndjson',JSON.stringify(file) + '\n' )
-          console.log("Reached max limit of number of pages to visit.");
-          return;
-        }else{
-          numLevelVisited++
-          callback(); 
-        }
+        console.log("no matched link found");
+        initializeVariables()
+        return;
+      }
+      // console.log(pagesVisited)
+     
     });
   }catch(error){
     console.log(`Error : ${error}`)
-  }
-
-  
+    initializeVariables()
+  }  
 }
 
   const searchForLinks = $ => {
@@ -86,16 +93,32 @@ const visitPage = (url,callback) => {
   }
 
   const getMatchLinks = () => {
+    let i = 0;
     if(totalLinkFound.length > 0){
       totalLinkFound.map(link => {
         regexArr.map(regex => {
           regex = new RegExp(regex)
           if(regex.test(link) === true){
-            file[regex].push(link) + '\n'
-            pagesToVisit.push(link)
+            i++
+            file[regex].push(link)
+            pagesToVisit.push(link)  
           }
         })
       })
     }
+    if(i > 0){
+      return true;
+    }
+    return false;
+  }
+
+  const initializeVariables = () => {
+    numLevelVisited = 1;
+    file= {};
+    totalLevel = 0;
+    totalLinkFound = [];
+    pagesVisited.clear()
+    pagesToVisit =[];
+    regexArr = [];
   }
 export default crawler
