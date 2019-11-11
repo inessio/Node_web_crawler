@@ -18,7 +18,7 @@ const crawler = (domain, numLevels = 3, regexes=[]) => {
   totalLevel = numLevels;
   regexArr.map(item => {
     let regex = new RegExp(item)
-    file[item] = []
+    file[regex] = []
   })
   crawl();
  
