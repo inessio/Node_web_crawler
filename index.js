@@ -7,7 +7,9 @@ import { check, validationResult } from 'express-validator'
 
 
 const app = express()
+const port = process.env.PORT || 8000;
 
+app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json())
 
 app.post('/crawl',[
@@ -15,7 +17,6 @@ app.post('/crawl',[
     
 ], async (req,res) => {
     const request = req.body
-    // console.log('request', request)
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(422).json({ errors: errors.array() });
@@ -26,6 +27,7 @@ app.post('/crawl',[
     })
 })
 
-app.listen(8090, ()=> {console.log('hello')})
+app.listen(port, ()=> {console.log(`Server started on port ${port}`)})
+export default app;
 
 

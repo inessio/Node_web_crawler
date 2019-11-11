@@ -10,7 +10,6 @@ var regexArr = [];
 var totalLevel = 0;
 var numLevelVisited = 1;
 var pagesVisited = new Set();
-var totalLinkFound = [];
 var file = {}
 
 const crawler = (domain, numLevels = 3, regexes=[]) => {
@@ -19,7 +18,7 @@ const crawler = (domain, numLevels = 3, regexes=[]) => {
   totalLevel = numLevels;
   regexArr.map(item => {
     let regex = new RegExp(item)
-    file[regex] = []
+    file[item] = []
   })
   crawl();
  
@@ -53,14 +52,14 @@ const visitPage = (url,callback) => {
         return;
       }
       var $ = cheerio.load(body);
-      await searchForLinks($);
-      const matchedLinks = await getMatchLinks();
+      const links = await searchForLinks($);
+      const matchedLinks = await getMatchLinks(links);
       if(matchedLinks === true){
         if(numLevelVisited > totalLevel) {
           fs.appendFileSync('result.ndjson',JSON.stringify(file) + '\n' )
             console.log("Reached max limit of number of pages to visit.");
             initializeVariables()
-            return;
+            return true;
           }else{
             numLevelVisited++
             callback(); 
@@ -69,7 +68,7 @@ const visitPage = (url,callback) => {
         fs.appendFileSync('result.ndjson',JSON.stringify(file) + '\n' )
         console.log("no matched link found");
         initializeVariables()
-        return;
+        return true;
       }
       // console.log(pagesVisited)
      
@@ -77,25 +76,29 @@ const visitPage = (url,callback) => {
   }catch(error){
     console.log(`Error : ${error}`)
     initializeVariables()
+    return false;
   }  
 }
 
   const searchForLinks = $ => {
     try {
+      let totalLinkFound = [];
       const links = $("a[href^='http']");
       links.each(function() {
         totalLinkFound.push($(this).attr('href'));    
       });
+      return totalLinkFound;
     } catch (error) {
       console.log("Error: ",error)
+      return false;
     }
   
   }
 
-  const getMatchLinks = () => {
+  const getMatchLinks = links => {
     let i = 0;
-    if(totalLinkFound.length > 0){
-      totalLinkFound.map(link => {
+    if(links.length > 0){
+      links.map(link => {
         regexArr.map(regex => {
           regex = new RegExp(regex)
           if(regex.test(link) === true){
@@ -113,12 +116,17 @@ const visitPage = (url,callback) => {
   }
 
   const initializeVariables = () => {
-    numLevelVisited = 1;
-    file= {};
-    totalLevel = 0;
-    totalLinkFound = [];
-    pagesVisited.clear()
-    pagesToVisit =[];
-    regexArr = [];
+    try {
+      numLevelVisited = 1;
+      file= {};
+      totalLevel = 0;
+      pagesVisited.clear()
+      pagesToVisit =[];
+      regexArr = [];
+      return true;
+    } catch (error) {
+      return false;
+    }
+    
   }
 export default crawler
