@@ -27,14 +27,17 @@ const crawler = (domain, numLevels = 3, regexes=[]) => {
 }
 
 const crawl = () => {
-  var nextPage = pagesToVisit.pop();
-  if (nextPage in pagesVisited) {
-    // We've already visited this page, so repeat the crawl
+  if(pagesToVisit.length > 0){
+    var nextPage = pagesToVisit.pop();
+    if (nextPage in pagesVisited) {
     crawl();
-  } else {
-    // New page we haven't visited
+    } else {
     visitPage(nextPage,crawl);
+   }
   }
+  console.log('No matched links found')
+  return;
+  
 
 }
 
