@@ -3,90 +3,96 @@
 import URL from 'url-parse';
 import cheerio from 'cheerio';
 import request from 'request';
+import fs from 'fs';
 
 
 var pagesToVisit = [];
-var numPagesVisited = 0;
-var pagesVisited = new Set(); 
+var regexArr = [];
+var totalLevel = 0;
+var numLevelVisited = 1;
+var pagesVisited = new Set();
+var totalLinkFound = [];
+var file = {}
 
-async function crawl(domain, numLevels = 3,regexes = []){
-  await pagesToVisit.push(domain);
-  if(numPagesVisited >= numLevels) {
-    console.log("Reached max limit of number of pages to visit.");
-    return;
-  }
-  var nextPage = pagesToVisit.pop();
-  if (pagesVisited.has(nextPage)) {
-      // We've already visited this page, so repeat the crawl
-      crawl();
-  } else {
-      // New page we haven't visited
-      console.log('we are here')
-      visitPage(nextPage,regexes,crawl);
-  }
+const crawler = (domain, numLevels = 3, regexes=[]) => {
+  regexArr = regexes;
+  pagesToVisit.push(domain);
+  totalLevel = numLevels;
+  regexArr.map(item => {
+    let regex = new RegExp(item)
+    file[regex] = []
+  })
+  crawl();
+ 
 }
 
-const visitPage = (url,regexes,callback) => {
+const crawl = () => {
+  var nextPage = pagesToVisit.pop();
+  if (nextPage in pagesVisited) {
+    // We've already visited this page, so repeat the crawl
+    crawl();
+  } else {
+    // New page we haven't visited
+    visitPage(nextPage,crawl);
+  }
+
+}
+
+const visitPage = (url,callback) => {
+  try{
     pagesVisited.add(url);
-    numPagesVisited++
-    console.log("Visiting page " + url);
-    request(url, function(error, response, body) {
-      // Check status code (200 is HTTP OK)
-      console.log("Status code: " + response.statusCode);
+    request(url, async function(error, response, body) {
       if(error){
-        console.log(`Error: ${error}`);
+        console.log('Error: ', error)
         return;
       }
+      console.log("Status code: " + response.statusCode);
       if(response.statusCode !== 200) {
         callback();
         return;
       }
-      // Parse the document body
-      const $ = cheerio.load(body);
-      relativeLinks($,url,regexes)
-      // var isWordFound = searchForWord($, "solution");
-      // const links = $('a');
-      // console.log(links)
-      // if(isWordFound) {
-      //   console.log('Word ' + SEARCH_WORD + ' found at page ' + url);
-      // } else {
-      //   collectInternalLinks($);
-      //   // In this short program, our callback is just calling crawl()
-      //   callback();
-      // }
-   });
+      var $ = cheerio.load(body);
+      await searchForLinks($);
+      await getMatchLinks();
+      if(numLevelVisited > totalLevel) {
+        fs.appendFileSync('result.ndjson',JSON.stringify(file) + '\n' )
+          console.log("Reached max limit of number of pages to visit.");
+          return;
+        }else{
+          numLevelVisited++
+          callback(); 
+        }
+    });
+  }catch(error){
+    console.log(`Error : ${error}`)
+  }
 
-   const relativeLinks = ($,url,regexes) => {
-
-    // var relativeLinks = $("a");
-    // console.log("Found " + relativeLinks.length + " relative links on page");
-    // relativeLinks.each(() => {
-    //     pagesToVisit.push(url + $(this).attr('href'));
-    // });
-    // console.log(pagesToVisit)
-     const links = $("a[href^='http']");
-    //  console.log(links)
-    console.log("Found " + links.length + " relative links on page");
-     links.each(function(){
-      pagesToVisit.push($(this).attr('href'));
-     })
-     console.log(pagesToVisit)
-    //  console.log(Object.values(links));
-    //  console.log(typeof(Object.values(links)))
-    //  Object.entries(links).forEach((item) => {
-    //    console.log(typeof(item))
-    //    console.log('element of the aray',item)
-    //  })
-    //  Object.values(links).forEach((link) => {
-    //    console.log(link);
-    //    return;
-    //  })
-    //  console.log(regexes)
-    //  regexes.map((index,regex) => {
-
-    //  })
-
-   }
+  
 }
 
-export default crawl
+  const searchForLinks = $ => {
+    try {
+      const links = $("a[href^='http']");
+      links.each(function() {
+        totalLinkFound.push($(this).attr('href'));    
+      });
+    } catch (error) {
+      console.log("Error: ",error)
+    }
+  
+  }
+
+  const getMatchLinks = () => {
+    if(totalLinkFound.length > 0){
+      totalLinkFound.map(link => {
+        regexArr.map(regex => {
+          regex = new RegExp(regex)
+          if(regex.test(link) === true){
+            file[regex].push(link) + '\n'
+            pagesToVisit.push(link)
+          }
+        })
+      })
+    }
+  }
+export default crawler
