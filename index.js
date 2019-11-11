@@ -6,14 +6,20 @@ import crawler  from './src/crawler'
 import { check, validationResult } from 'express-validator'
 
 
-const app = express()
-const port = process.env.PORT || 8000;
+const app = express();
+const PORT = process.env.PORT || 8080;
+const HOST = '0.0.0.0';
 
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json())
 
 app.post('/crawl',[
-    check('domain').isURL()
+    check('domain')
+    .not()
+    .isEmail()
+    .isURL(),
+    check('numLevels').isNumeric(),
+    check('regexes').isArray()
     
 ], async (req,res) => {
     const request = req.body
@@ -27,7 +33,8 @@ app.post('/crawl',[
     })
 })
 
-app.listen(port, ()=> {console.log(`Server started on port ${port}`)})
+app.listen(PORT,HOST);
+console.log(`Server running  on: http://${HOST}:${PORT}`);
 export default app;
 
 

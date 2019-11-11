@@ -56,7 +56,7 @@ const visitPage = (url,callback) => {
       const matchedLinks = await getMatchLinks(links);
       if(matchedLinks === true){
         if(numLevelVisited > totalLevel) {
-          fs.appendFileSync('result.ndjson',JSON.stringify(file) + '\n' )
+          fs.appendFileSync('files/result.ndjson',JSON.stringify(file) + '\n' )
             console.log("Reached max limit of number of pages to visit.");
             initializeVariables()
             return true;
@@ -65,7 +65,7 @@ const visitPage = (url,callback) => {
             callback(); 
           }
       }else{
-        fs.appendFileSync('result.ndjson',JSON.stringify(file) + '\n' )
+        fs.appendFileSync('files/result.ndjson',JSON.stringify(file) + '\n' )
         console.log("no matched link found");
         initializeVariables()
         return true;
