@@ -12,6 +12,8 @@ var numLevelVisited = 1;
 var pagesVisited = new Set();
 var file = {}
 
+// crawler function, takes 3 params:
+// the domain name, the level and an array of regex you want to match the links found with
 const crawler = (domain, numLevels = 3, regexes=[]) => {
   regexArr = regexes;
   pagesToVisit.push(domain);
@@ -24,6 +26,7 @@ const crawler = (domain, numLevels = 3, regexes=[]) => {
  
 }
 
+// check visited pages
 const crawl = () => {
   if(pagesToVisit.length > 0){
     var nextPage = pagesToVisit.pop();
@@ -36,6 +39,8 @@ const crawl = () => {
   console.log(pagesToVisit)
     
 }
+
+//visit page, it takes a url and a callback function as params
 
 const visitPage = (url,callback) => {
   try{
@@ -80,6 +85,7 @@ const visitPage = (url,callback) => {
   }  
 }
 
+//search link while visiting a page
   const searchForLinks = $ => {
     try {
       let totalLinkFound = [];
@@ -95,6 +101,8 @@ const visitPage = (url,callback) => {
   
   }
 
+  //get matched link with the regex array 
+  
   const getMatchLinks = links => {
     let i = 0;
     if(links.length > 0){
